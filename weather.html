@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --accent-blue: #3a79db;
+            --error-color: #e53e3e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .weather-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 20px 24px;
+            width: 1080px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hko-header {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        /* Marquee Display Area */
+        .marquee-container {
+            height: 121px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 0 16px;
+            position: relative;
+        }
+
+        #marquee-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            transition: opacity 0.4s ease-in-out;
+            opacity: 1;
+        }
+
+        #marquee-display.fade {
+            opacity: 0;
+        }
+
+        /* Weather Row Styles inside Marquee */
+        .weather-marquee-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .temp-text {
+            color: var(--accent-blue);
+        }
+
+        .marquee-warning-icons {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .warning-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            vertical-align: middle;
+        }
+
+        span.temp-symbol {
+            font-size: smaller;
+        }
+
+        .error-text {
+            color: var(--error-color);
+            font-size: 1rem;
+        }
+
+        span.weather-update-time {
+            font-size: 8px;
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="weather-card">
+
+        <!-- Rotating Information Marquee Container -->
+        <div class="marquee-container">
+            <div id="marquee-display">正在載入數據...</div>
+        </div>
+    </div>
+
+    <script>
+        const warningIcons = {
+            "WFIREY": "fireyellow", "WFIRER": "firered", "WFROST": "frost", "WHOT": "hot",
+            "WCOLD": "cold", "WTS": "ts", "WLIP": "landslip", "WMSGNL": "sms", "WL": "ls",
+            "WTMW": "tsunami", "WRAINA": "rainamber", "WRAINR": "rainred", "WRAINB": "rainblack",
+            "WFNTSA": "northflood", "WFNTERTL": "northflood", "TC1": "tc1", "TC3": "tc3", "TC8NE": "tc08ne",
+            "TC8NW": "tc08nw", "TC8SE": "tc08se", "TC8SW": "tc08sw", "TC9": "tc09", "TC10": "tc10"
+        };
+
+        // Cache system data states globally
+        let currentTemp = "--";
+        let currentHumidity = "--";
+        let warningIconsHtml = "";
+        let iconId = "";
+        let marqueeState = 1; // 0 = Display Time, 1 = Display Weather Status
+
+        // Track API errors cleanly without breaking state loops
+        let hasFetchError = false;
+
+        function getChineseDay(dayIndex) {
+            const days = ["日", "一", "二", "三", "四", "五", "六"];
+            return `星期${days[dayIndex]}`;
+        }
+
+        // Helper: Zero pads time digits
+        function pad(num) {
+            return num.toString().padStart(2, '0');
+        }
+
+        // Generates Time layout string
+        function formatCurrentTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = pad(now.getMonth() + 1);
+            const date = pad(now.getDate());
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const dayStr = getChineseDay(now.getDay());
+
+            return `${year}年${month}月${date}日 ${dayStr} ${hours}:${minutes} `;
+        }
+
+        // Generates Update Time for Weather 
+        function formatWeatherTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = pad(now.getMonth() + 1);
+            const date = pad(now.getDate());
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const dayStr = getChineseDay(now.getDay());
+
+            return `${hours}:${minutes}Updated`;
+        }
+
+        // Fetch Live Weather & Warnings Framework Data
+        async function fetchWeatherData() {
+            try {
+                const [rhrResponse, warnResponse] = await Promise.all([
+                    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc'),
+                    fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warningInfo&lang=tc')
+                ]);
+
+                if (!rhrResponse.ok || !warnResponse.ok) {
+                    throw new Error("HTTP connection error checking status paths");
+                }
+
+                const rhrData = await rhrResponse.json();
+                const warnData = await warnResponse.json();
+                /*  const warnData = {
+                     "details": [
+                         { "warningStatementCode": "WTS", "contents": [] },
+                         { "warningStatementCode": "WRAINB", "contents": [] },
+                         { "warningStatementCode": "WFNTSA", "contents": [] },
+                         { "warningStatementCode": "WFNTSA", "contents": [] },
+                         { "warningStatementCode": "WHOT", "contents": [] }
+                     ]
+                 }; */
+
+                // 1. Process Shau Kei Wan Temperature
+                const hkoTemp = rhrData.temperature.data.find(item => item.place === "筲箕灣");
+                if (hkoTemp) {
+                    currentTemp = hkoTemp.value;
+                }
+
+                if (rhrData.humidity && rhrData.humidity.data && rhrData.humidity.data.length > 0) {
+                    currentHumidity = rhrData.humidity.data[0].value;
+                }
+
+                if (rhrData.icon && rhrData.icon.length > 0) {
+                    iconId = rhrData.icon[0];
+                }
+
+                // 2. Clear & Prepare Mini Warning Icon tags side-by-side
+                if (warnData.details && warnData.details.length > 0) {
+                    let tempIconsHtml = '<span class="marquee-warning-icons">';
+                    warnData.details.forEach(detail => {
+                        const code = detail.warningStatementCode;
+                        const iconName = warningIcons[code] ? warningIcons[code] : 'warn';
+                        tempIconsHtml += `<img class="warning-icon" src="https://www.hko.gov.hk/tc/textonly/img/warn/images/${iconName}.png" alt="warning">`;
+                    });
+                    tempIconsHtml += '</span>';
+                    warningIconsHtml = tempIconsHtml;
+                } else {
+                    warningIconsHtml = "";
+                }
+
+                // Everything succeeded, reset error status tracking
+                hasFetchError = false;
+
+            } catch (error) {
+                console.error('Error updates tracking local metrics:', error);
+                // Flag error state so marquee handles it visually
+                hasFetchError = true;
+            }
+        }
+
+        // Handle structural views cross-fade loops smoothly every 10 seconds
+        function rotateMarqueeLoop() {
+            const displayEl = document.getElementById('marquee-display');
+
+            // Step 1: Trigger CSS opacity dip
+            displayEl.classList.add('fade');
+
+            // Step 2: Swap content mid-fade, then scale view back up
+            setTimeout(() => {
+                if (marqueeState === 0) {
+                    // Loop Option A: Render Current Live Stamp (Always works even on API crashes)
+                    displayEl.innerHTML = formatCurrentTime();
+                    marqueeState = 1;
+                } else {
+                    // Loop Option B: Render Weather Status OR Error fallback message smoothly
+                    if (hasFetchError) {
+                        displayEl.innerHTML = `<span class="error-text">無法顯示即時數據</span>`;
+                    } else {
+                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:50px; height:50px; vertical-align:middle;" alt="Weather Status">` : '';
+                        displayEl.innerHTML = `
+                            <div class="weather-marquee-row">
+                                <span>氣溫: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
+                                <span>濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
+                                <span>${finalIconSrc}</span>
+                                <span>${warningIconsHtml}</span>
+                            </div>
+                            <span class="weather-update-time">${formatWeatherTime()}</span>
+                        `;
+                    }
+                    marqueeState = 0;
+                }
+                displayEl.classList.remove('fade');
+            }, 400);
+        }
+
+        // Initialization Processes
+        async function initWidget() {
+            // Fetch initial configuration framework setup
+            await fetchWeatherData();
+
+            // Render live clock time straight away to start interface cleanly
+            document.getElementById('marquee-display').innerHTML = rotateMarqueeLoop();
+            marqueeState = 1;
+
+            // Start loop rotation transitions every 10 seconds
+            setInterval(rotateMarqueeLoop, 30000);
+
+            // Keep underlying global API variables refreshed safely every 1 minutes 
+            setInterval(fetchWeatherData, 200000);
+        }
+
+        initWidget();
+    </script>
+</body>
+
+</html>
