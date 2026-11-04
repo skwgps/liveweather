@@ -11,45 +11,48 @@
             --bg-color: transparent;
             --card-bg: #162a65;
             --text-main: #ffffff;
-            --text-muted: #718096;
-            --accent-blue: #ff7d00;
             --error-color: #ff4d4d;
-            /* 針對 1095x121 精準優化的字體與圖示尺寸 */
-            --marquee-fontsize: 48px;
-            --marquee-timefont: 48px;
+            /* 將字體適度縮小至 38px，確保加上圖示後垂直絕對置中 */
+            --marquee-fontsize: 38px;
+            --marquee-timefont: 38px;
         }
 
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        html, body {
-            width: 1095px;
-            height: 121px;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: var(--bg-color);
+        /* 強制鎖定視窗，嚴格禁止出現任何滾動條 */
+        html,
+        body {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 1095px !important;
+            max-height: 121px !important;
+            overflow: hidden !important;
+            /* 徹底關閉滾動條 */
+            background-color: transparent;
             font-family: "WDXL Lubrifont TC", "Microsoft JhengHei", "PMingLiU", sans-serif;
         }
 
         .weather-card {
             background-color: var(--card-bg);
-            width: 1095px;
-            height: 121px;
+            width: 100%;
+            height: 100%;
             text-align: center;
-            text-shadow: 2px 2px 0px #000000, 0 2px 5px rgba(0, 0, 0, 0.4);
+            text-shadow: 2px 2px 0px #000000;
         }
 
         /* Marquee Display Area */
         .marquee-container {
-            width: 1095px;
-            height: 121px;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            padding: 0 12px;
+            padding: 0 8px;
             position: relative;
             background-color: #162a65;
             background-image:
@@ -58,7 +61,7 @@
                 radial-gradient(circle at 10% 15%, #375fb6 0%, transparent 60%),
                 radial-gradient(circle at 90% 85%, #375fb6 0%, transparent 60%);
             background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
-            box-shadow: inset 0 0 20px #0c183a;
+            box-shadow: inset 0 0 15px #0c183a;
         }
 
         #marquee-display {
@@ -68,26 +71,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
             height: 100%;
             transition: opacity 0.4s ease-in-out;
             opacity: 1;
             text-shadow: 2px 2px 0px #3264d6, 3px 3px 0px #04040480;
             white-space: nowrap;
+            line-height: 1;
+            /* 防止字體行高過大擠壓垂直位置 */
         }
 
         #marquee-display.fade {
             opacity: 0;
         }
 
-        /* Weather Row Styles inside Marquee */
         .weather-marquee-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             white-space: nowrap;
+            height: 100%;
         }
 
         .temp-text {
@@ -97,7 +102,7 @@
         .marquee-warning-icons {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .warning-icon-wrapper {
@@ -105,49 +110,18 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
         }
 
         .warning-icon {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            vertical-align: middle;
-        }
-
-        .warning-icon-wrapper.canceled {
-            opacity: 0.6;
-        }
-
-        /* 繪製 X 的對角線 */
-        .warning-icon-wrapper.canceled::before,
-        .warning-icon-wrapper.canceled::after {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            background-color: var(--error-color);
-            border-radius: 2px;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        .warning-icon-wrapper.canceled::before {
-            transform: rotate(45deg);
-        }
-
-        .warning-icon-wrapper.canceled::after {
-            transform: rotate(-45deg);
         }
 
         span.temp-symbol {
-            font-size: calc(var(--marquee-fontsize) - 10px);
-        }
-
-        .error-text {
-            color: var(--error-color);
-            font-size: calc(var(--marquee-timefont) - 10px);
+            font-size: calc(var(--marquee-fontsize) - 8px);
         }
 
         span.current-icon {
@@ -155,9 +129,16 @@
             align-items: center;
         }
 
+        /* 天氣圖示高度限制在 42px 內，避免拉高行高 */
+        span.current-icon img {
+            width: 42px !important;
+            height: 42px !important;
+            vertical-align: middle;
+        }
+
         span.current-time {
             font-size: var(--marquee-timefont);
-            letter-spacing: 1px;
+            line-height: 1;
         }
     </style>
 </head>
