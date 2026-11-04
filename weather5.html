@@ -8,45 +8,49 @@
         @import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
 
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
+            --bg-color: transparent;
+            --card-bg: #162a65;
             --text-main: #ffffff;
             --text-muted: #718096;
             --accent-blue: #ff7d00;
-            --error-color: #ff0000;
-            --marquee-fontsize: 75px;
-            --marquee-timefont: 75px;
+            --error-color: #ff4d4d;
+            /* 針對 1095x121 精準優化的字體與圖示尺寸 */
+            --marquee-fontsize: 48px;
+            --marquee-timefont: 48px;
         }
 
-        body {
-            font-family: "WDXL Lubrifont TC", "Microsoft JhengHei", "PMingLiU", sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 1095px;
+            height: 121px;
             margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: "WDXL Lubrifont TC", "Microsoft JhengHei", "PMingLiU", sans-serif;
         }
 
         .weather-card {
             background-color: var(--card-bg);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             width: 1095px;
+            height: 121px;
             text-align: center;
-            border: 1px solid #e2e8f0;
-            text-shadow: 3px 3px 0px #000000, 0 4px 10px rgba(0, 0, 0, 0.4);
+            text-shadow: 2px 2px 0px #000000, 0 2px 5px rgba(0, 0, 0, 0.4);
         }
 
         /* Marquee Display Area */
         .marquee-container {
+            width: 1095px;
             height: 121px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            padding: 0 16px;
+            padding: 0 12px;
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.2);
             background-color: #162a65;
             background-image:
                 linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
@@ -54,7 +58,7 @@
                 radial-gradient(circle at 10% 15%, #375fb6 0%, transparent 60%),
                 radial-gradient(circle at 90% 85%, #375fb6 0%, transparent 60%);
             background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
-            box-shadow: inset 0 0 30px #0c183a;
+            box-shadow: inset 0 0 20px #0c183a;
         }
 
         #marquee-display {
@@ -64,11 +68,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
+            height: 100%;
             transition: opacity 0.4s ease-in-out;
             opacity: 1;
-            text-shadow: 2px 2px 0px #5e91ff, 4px 4px 0px #04040433;
+            text-shadow: 2px 2px 0px #3264d6, 3px 3px 0px #04040480;
+            white-space: nowrap;
         }
 
         #marquee-display.fade {
@@ -80,17 +86,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 12px;
+            white-space: nowrap;
         }
 
         .temp-text {
-            font-weight: 1000;
+            font-weight: 900;
         }
 
         .marquee-warning-icons {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
             gap: 6px;
         }
 
@@ -99,8 +105,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 70px;
-            height: 70px;
+            width: 50px;
+            height: 50px;
         }
 
         .warning-icon {
@@ -111,7 +117,7 @@
         }
 
         .warning-icon-wrapper.canceled {
-            opacity: 1;
+            opacity: 0.6;
         }
 
         /* 繪製 X 的對角線 */
@@ -120,9 +126,9 @@
             content: "";
             position: absolute;
             width: 100%;
-            height: 2px;
+            height: 3px;
             background-color: var(--error-color);
-            border-radius: 1px;
+            border-radius: 2px;
             z-index: 5;
             pointer-events: none;
         }
@@ -136,20 +142,22 @@
         }
 
         span.temp-symbol {
-            font-size: calc(var(--marquee-fontsize) - 20px);
+            font-size: calc(var(--marquee-fontsize) - 10px);
         }
 
         .error-text {
             color: var(--error-color);
-            font-size: var(--marquee-timefont);
+            font-size: calc(var(--marquee-timefont) - 10px);
         }
 
         span.current-icon {
             display: flex;
+            align-items: center;
         }
 
         span.current-time {
             font-size: var(--marquee-timefont);
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -337,11 +345,11 @@
                     if (hasFetchError) {
                         displayEl.innerHTML = `<span class="error-text">無法顯示即時數據 (${errorMessage})</span>`;
                     } else {
-                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:70px; height:70px; vertical-align:middle;" alt="Weather Status">` : '';
+                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:50px; height:50px; vertical-align:middle;" alt="Weather Status">` : '';
                         displayEl.innerHTML = `
                         <div class="weather-marquee-row">
-                            <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                            <span>濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
+                            <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
+                            <span>&nbsp;&nbsp;濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
                             <span class="current-icon">${finalIconSrc}</span>
                             <span>${warningIconsHtml}</span>
                         </div>
