@@ -56,12 +56,13 @@
             position: relative;
             background-color: #162a65;
             background-image:
-                linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
-                linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%),
-                radial-gradient(circle at 10% 15%, #375fb6 0%, transparent 60%),
-                radial-gradient(circle at 90% 85%, #375fb6 0%, transparent 60%);
-            background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
-            box-shadow: inset 0 0 15px #0c183a;
+                linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
+                linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
+                radial-gradient(circle at 10% 50%, #284c9f 0%, transparent 40%),
+                radial-gradient(circle at 90% 50%, #284c9f 0%, transparent 40%);
+            /* 將 60px 縮小至 20px，讓格紋變得非常細緻不被拉伸放大 */
+            background-size: 20px 20px, 20px 20px, 100% 100%, 100% 100%;
+            box-shadow: inset 0 0 12px #0c183a;
         }
 
         #marquee-display {
@@ -210,7 +211,7 @@
             const seconds = pad(now.getSeconds());
             const dayStr = getChineseDay(now.getDay());
 
-            return year + "年" + month + "月" + date + "日 " + dayStr + "  " + hours + ":" + minutes + ":" + seconds;
+            return year + "年" + month + "月" + date + "日　" + dayStr + "　" + hours + ":" + minutes + ":" + seconds;
         }
 
         // 2. 跨域/網絡請求備援機制
