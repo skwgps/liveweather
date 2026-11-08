@@ -161,7 +161,7 @@
             "TC8NW": "tc8nw", "TC8SE": "tc8se", "TC8SW": "tc8sw", "TC9": "tc9", "TC10": "tc10"
         };
 
-        // 防閃爍核心 1：從 localStorage 讀取上次成功抓取的快取數據，避免初始化時顯示「正在載入數據」
+        // 快取讀取機制
         let currentTemp = localStorage.getItem('cached_temp') || "--";
         let currentHumidity = localStorage.getItem('cached_humidity') || "--";
         let warningIconsHtml = localStorage.getItem('cached_warn_html') || "";
@@ -173,13 +173,14 @@
 
         function getChineseDay(dayIndex) {
             const days = ["日", "一", "二", "三", "四", "五", "六"];
-            return "星期" + days.slice(dayIndex, dayIndex + 1);
+            return "星期" + days[dayIndex];
         }
 
         function pad(num) {
             return num.toString().padStart(2, '0');
         }
 
+        // 使用本地系統時間
         function formatCurrentTime() {
             const now = new Date();
             const year = now.getFullYear();
@@ -190,10 +191,9 @@
             const seconds = pad(now.getSeconds());
             const dayStr = getChineseDay(now.getDay());
 
-            return year + "年" + month + "月" + date + "日 " + dayStr + " " + hours + ":" + minutes + ":" + seconds;
+            return `${year}年${month}月${date}日 ${dayStr} ${hours}:${minutes}:${seconds}`;
         }
 
-        // 網路請求與數據快取
         async function fetchWithFallback(url) {
             try {
                 const res = await fetch(url);
@@ -225,18 +225,18 @@
                     const hkoTemp = tempArray.find(item => item.place === "筲箕灣") || tempArray[0];
                     if (hkoTemp) {
                         currentTemp = hkoTemp.value;
-                        localStorage.setItem('cached_temp', currentTemp); // 寫入快取
+                        localStorage.setItem('cached_temp', currentTemp);
                     }
                 }
 
                 if (rhrData && rhrData.humidity && rhrData.humidity.data && rhrData.humidity.data.length > 0) {
                     currentHumidity = rhrData.humidity.data[0].value;
-                    localStorage.setItem('cached_humidity', currentHumidity); // 寫入快取
+                    localStorage.setItem('cached_humidity', currentHumidity);
                 }
 
                 if (rhrData && rhrData.icon && rhrData.icon.length > 0) {
                     iconId = rhrData.icon[0];
-                    localStorage.setItem('cached_icon_id', iconId); // 寫入快取
+                    localStorage.setItem('cached_icon_id', iconId);
                 }
 
                 if (warnData && Object.keys(warnData).length > 0) {
@@ -251,15 +251,15 @@
                             if (isCanceled) iconName += '_dim';
 
                             tempIconsHtml += `
-                    <span class="warning-icon-wrapper ${isCanceled ? 'canceled' : ''}">
-                        <img class="warning-icon" src="https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${iconName}.gif" alt="warning">
-                    </span>`;
+                            <span class="warning-icon-wrapper ${isCanceled ? 'canceled' : ''}">
+                                <img class="warning-icon" src="https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${iconName}.gif" alt="warning">
+                            </span>`;
                             iconCount++;
                         }
                     }
                     tempIconsHtml += '</span>';
                     warningIconsHtml = tempIconsHtml;
-                    localStorage.setItem('cached_warn_html', warningIconsHtml); // 寫入快取
+                    localStorage.setItem('cached_warn_html', warningIconsHtml);
                 } else {
                     warningIconsHtml = "";
                     localStorage.setItem('cached_warn_html', "");
@@ -275,7 +275,6 @@
             }
         }
 
-        // 精準每秒更新時間，避免 innerHTML 重新構建 DOM 觸發閃爍
         function updateLiveClock() {
             const clockEl = document.getElementById('live-clock-target');
             if (clockEl) {
@@ -295,14 +294,14 @@
                     if (hasFetchError && currentTemp === "--") {
                         displayEl.innerHTML = `<span class="error-text">無法顯示即時數據 (${errorMessage})</span>`;
                     } else {
-                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:50px; height:50px; vertical-align:middle;" alt="Weather Status">` : '';
+                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:42px; height:42px; vertical-align:middle;" alt="Weather Status">` : '';
                         displayEl.innerHTML = `
-                <div class="weather-marquee-row">
-                    <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
-                    <span>&nbsp;&nbsp;濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
-                    <span class="current-icon">${finalIconSrc}</span>
-                    <span>${warningIconsHtml}</span>
-                </div>`;
+                        <div class="weather-marquee-row">
+                            <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
+                            <span>&nbsp;&nbsp;濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
+                            <span class="current-icon">${finalIconSrc}</span>
+                            <span>${warningIconsHtml}</span>
+                        </div>`;
                     }
                     marqueeState = 0;
                 }
@@ -311,12 +310,9 @@
             }, 400);
         }
 
-        // 頁面初次載入立即渲染快取資料
         async function initWidget() {
-            rotateMarqueeLoop(); // 立即啟用輪播（帶入快取的數據，絕不閃爍「正在載入」）
+            rotateMarqueeLoop();
             setInterval(updateLiveClock, 1000);
-
-            // 背景靜默更新數據
             await fetchWeatherData();
             setInterval(fetchWeatherData, 200000);
         }
