@@ -161,28 +161,48 @@
             "TC8NW": "tc8nw", "TC8SE": "tc8se", "TC8SW": "tc8sw", "TC9": "tc9", "TC10": "tc10"
         };
 
-        // 快取讀取機制
-        let currentTemp = localStorage.getItem('cached_temp') || "--";
-        let currentHumidity = localStorage.getItem('cached_humidity') || "--";
-        let warningIconsHtml = localStorage.getItem('cached_warn_html') || "";
-        let iconId = localStorage.getItem('cached_icon_id') || "";
-
+        let currentTemp = "--";
+        let currentHumidity = "--";
+        let warningIconsHtml = "";
+        let iconId = "";
         let marqueeState = 1;
         let hasFetchError = false;
         let errorMessage = "";
+        let timeOffset = 0; // 本機與網絡標準時間的時差 (毫秒)
+
+        // 1. 網絡對時機制
+        async function syncNetworkTime() {
+            try {
+                const start = Date.now();
+                const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Hong_Kong');
+                if (res.ok) {
+                    const data = await res.json();
+                    const networkTime = new Date(data.datetime).getTime();
+                    const end = Date.now();
+                    const latency = (end - start) / 2;
+                    timeOffset = (networkTime + latency) - Date.now();
+                }
+            } catch (e) {
+                console.warn('網絡對時失敗，將暫時使用本機系統時間:', e);
+            }
+        }
+
+        // 取得校正後的精準時間
+        function getAccurateNow() {
+            return new Date(Date.now() + timeOffset);
+        }
 
         function getChineseDay(dayIndex) {
             const days = ["日", "一", "二", "三", "四", "五", "六"];
-            return "星期" + days[dayIndex];
+            return "星期" + days.slice(dayIndex, dayIndex + 1);
         }
 
         function pad(num) {
             return num.toString().padStart(2, '0');
         }
 
-        // 使用本地系統時間
         function formatCurrentTime() {
-            const now = new Date();
+            const now = getAccurateNow(); // 使用網絡校正後的時間
             const year = now.getFullYear();
             const month = pad(now.getMonth() + 1);
             const date = pad(now.getDate());
@@ -191,9 +211,10 @@
             const seconds = pad(now.getSeconds());
             const dayStr = getChineseDay(now.getDay());
 
-            return `${year}年${month}月${date}日 ${dayStr} ${hours}:${minutes}:${seconds}`;
+            return year + "年" + month + "月" + date + "日　" + dayStr + "　" + hours + ":" + minutes + ":" + seconds;
         }
 
+        // 2. 跨域/網絡請求備援機制
         async function fetchWithFallback(url) {
             try {
                 const res = await fetch(url);
@@ -201,9 +222,13 @@
             } catch (e) {
                 console.log("Direct fetch failed, using fallback...");
             }
+
+            // 使用 api.allorigins.win 繞過播放器 CORS 限制
             const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
             const proxyRes = await fetch(proxyUrl);
-            if (!proxyRes.ok) throw new Error("HTTP " + proxyRes.status);
+            if (!proxyRes.ok) {
+                throw new Error("HTTP " + proxyRes.status);
+            }
             return proxyRes;
         }
 
@@ -215,30 +240,32 @@
                 const rhrResponse = await fetchWithFallback(rawRhrUrl);
                 const warnResponse = await fetchWithFallback(rawWarnUrl);
 
-                if (!rhrResponse || !warnResponse) throw new Error("Network error");
+                if (!rhrResponse || !warnResponse) {
+                    throw new Error("Network error");
+                }
 
                 const rhrData = await rhrResponse.json();
                 const warnData = await warnResponse.json();
 
                 if (rhrData && rhrData.temperature && rhrData.temperature.data) {
                     const tempArray = rhrData.temperature.data;
-                    const hkoTemp = tempArray.find(item => item.place === "筲箕灣") || tempArray[0];
+                    const hkoTemp = tempArray.find(function (item) { return item.place === "筲箕灣"; })
+                        || tempArray.slice(0, 1).pop();
                     if (hkoTemp) {
                         currentTemp = hkoTemp.value;
-                        localStorage.setItem('cached_temp', currentTemp);
                     }
                 }
 
                 if (rhrData && rhrData.humidity && rhrData.humidity.data && rhrData.humidity.data.length > 0) {
-                    currentHumidity = rhrData.humidity.data[0].value;
-                    localStorage.setItem('cached_humidity', currentHumidity);
+                    const firstHumidity = rhrData.humidity.data.slice(0, 1).pop();
+                    if (firstHumidity) currentHumidity = firstHumidity.value;
                 }
 
                 if (rhrData && rhrData.icon && rhrData.icon.length > 0) {
-                    iconId = rhrData.icon[0];
-                    localStorage.setItem('cached_icon_id', iconId);
+                    iconId = rhrData.icon.slice(0, 1).pop();
                 }
 
+                // 處理警告標籤
                 if (warnData && Object.keys(warnData).length > 0) {
                     let tempIconsHtml = '<span class="marquee-warning-icons">';
                     let iconCount = 0;
@@ -246,23 +273,28 @@
                     for (const key in warnData) {
                         if (Object.prototype.hasOwnProperty.call(warnData, key) && iconCount < 5) {
                             const detail = warnData[key];
-                            let iconName = warningIcons[detail.code] || 'warn';
-                            const isCanceled = (detail.actionCode === 'CANCEL');
-                            if (isCanceled) iconName += '_dim';
+                            const code = detail.code;
+                            const actionCode = detail.actionCode;
+
+                            let iconName = Object.prototype.hasOwnProperty.call(warningIcons, code) ? warningIcons[code] : 'warn';
+                            const isCanceled = (actionCode === 'CANCEL');
+
+                            if (isCanceled) {
+                                iconName = iconName + '_dim';
+                            }
 
                             tempIconsHtml += `
                             <span class="warning-icon-wrapper ${isCanceled ? 'canceled' : ''}">
                                 <img class="warning-icon" src="https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${iconName}.gif" alt="warning">
-                            </span>`;
+                            </span>
+                        `;
                             iconCount++;
                         }
                     }
                     tempIconsHtml += '</span>';
                     warningIconsHtml = tempIconsHtml;
-                    localStorage.setItem('cached_warn_html', warningIconsHtml);
                 } else {
                     warningIconsHtml = "";
-                    localStorage.setItem('cached_warn_html', "");
                 }
 
                 hasFetchError = false;
@@ -278,12 +310,13 @@
         function updateLiveClock() {
             const clockEl = document.getElementById('live-clock-target');
             if (clockEl) {
-                clockEl.textContent = formatCurrentTime();
+                clockEl.innerHTML = formatCurrentTime();
             }
         }
 
         function rotateMarqueeLoop() {
             const displayEl = document.getElementById('marquee-display');
+
             displayEl.classList.add('fade');
 
             setTimeout(function () {
@@ -291,30 +324,36 @@
                     displayEl.innerHTML = `<span class="current-time" id="live-clock-target">${formatCurrentTime()}</span>`;
                     marqueeState = 1;
                 } else {
-                    if (hasFetchError && currentTemp === "--") {
+                    if (hasFetchError) {
                         displayEl.innerHTML = `<span class="error-text">無法顯示即時數據 (${errorMessage})</span>`;
                     } else {
-                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:42px; height:42px; vertical-align:middle;" alt="Weather Status">` : '';
+                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" style="width:50px; height:50px; vertical-align:middle;" alt="Weather Status">` : '';
                         displayEl.innerHTML = `
                         <div class="weather-marquee-row">
                             <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
                             <span>&nbsp;&nbsp;濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
                             <span class="current-icon">${finalIconSrc}</span>
                             <span>${warningIconsHtml}</span>
-                        </div>`;
+                        </div>
+                    `;
                     }
                     marqueeState = 0;
                 }
                 displayEl.classList.remove('fade');
-                setTimeout(rotateMarqueeLoop, 20000);
+
+                const nextDelay = (marqueeState === 1) ? 60000 : 20000;
+                setTimeout(rotateMarqueeLoop, nextDelay);
+
             }, 400);
         }
 
         async function initWidget() {
+            await syncNetworkTime(); // 初始化對時
+            await fetchWeatherData();
             rotateMarqueeLoop();
             setInterval(updateLiveClock, 1000);
-            await fetchWeatherData();
             setInterval(fetchWeatherData, 200000);
+            setInterval(syncNetworkTime, 3600000); // 每小時重新對時
         }
 
         initWidget();
