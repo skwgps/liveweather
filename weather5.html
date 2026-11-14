@@ -7,15 +7,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap');
 
-        :root {
-            --bg-color: transparent;
-            --card-bg: #162a65;
-            --text-main: #ffffff;
-            --error-color: #ff0000;
-            --marquee-fontsize: 38px;
-            --marquee-timefont: 38px;
-        }
-
         * {
             box-sizing: border-box !important;
             margin: 0 !important;
@@ -34,23 +25,11 @@
         }
 
         .weather-card {
-            background-color: var(--card-bg);
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            text-shadow: 2px 2px 0px #000000;
-        }
-
-        .marquee-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            padding: 0 24px !important;
-            position: relative;
             background-color: #162a65;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
             background-image:
                 linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
                 linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
@@ -60,303 +39,30 @@
             box-shadow: inset 0 0 12px #0c183a;
         }
 
-        #marquee-display {
-            font-size: var(--marquee-fontsize);
-            font-weight: 400;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        #weather-canvas {
             width: 100%;
             height: 100%;
-            transition: opacity 0.4s ease-in-out;
-            opacity: 1;
-            text-shadow: 2px 2px 0px #3264d6, 3px 3px 0px #04040480;
-            white-space: nowrap;
-            line-height: 1;
-            overflow: hidden;
-        }
-
-        #marquee-display.is-overflowing {
-            justify-content: flex-start;
-        }
-
-        #marquee-display.fade {
-            opacity: 0;
-        }
-
-        .weather-marquee-row {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            white-space: nowrap;
-            height: 100%;
-            will-change: transform;
-            backface-visibility: hidden;
-            transform: translate3d(0, 0, 0);
-        }
-
-        /* 僅播放「一次」（1 forwards），捲動至結尾後停頓並直接切換下一頁 */
-        .scroll-once {
-            animation: scrollOnceMarquee var(--scroll-duration, 8s) linear 1 forwards;
-        }
-
-        @keyframes scrollOnceMarquee {
-
-            0%,
-            15% {
-                transform: translate3d(0, 0, 0);
-            }
-
-            85%,
-            100% {
-                transform: translate3d(var(--scroll-dist), 0, 0);
-            }
-        }
-
-        /* 「明日預報」開場標題：深海軍藍質感底色 + 亮金邊框，完美融入皇家藍菱格背景 */
-        .forecast-intro-title {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            padding: 10px 34px !important;
-            /* 深藍漸層底色，避免半透明黃色混出灰濁感 */
-            background: linear-gradient(180deg, #1b367d 0%, #0d1c47 100%);
-            border: 2.5px solid #ffd166;
-            border-radius: 14px;
-            color: #ffe082;
-            font-size: calc(var(--marquee-fontsize) + 4px);
-            letter-spacing: 5px;
-            /* 乾淨的深色立體陰影 + 內層微光，取代原本的亮藍文字重影 */
-            text-shadow: 0 3px 0 #08112e, 0 5px 10px rgba(0, 0, 0, 0.65);
-            box-shadow:
-                0 6px 16px rgba(5, 12, 35, 0.55),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25),
-                0 0 14px rgba(255, 209, 102, 0.25);
-            animation: introPopIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        /* 讓開場標題裡的天氣圖示也有立體感 */
-        .forecast-intro-title .current-icon img {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
-        }
-
-        @keyframes introPopIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.82) translateY(6px);
-            }
-
-            70% {
-                opacity: 1;
-                transform: scale(1.04) translateY(0);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .temp-text {
-            font-weight: 900;
-        }
-
-        .marquee-warning-icons {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .warning-icon-wrapper {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-        }
-
-        .warning-icon {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .warning-icon-wrapper.canceled {
-            opacity: 1;
-        }
-
-        .warning-icon-wrapper.canceled::before,
-        .warning-icon-wrapper.canceled::after {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background-color: var(--error-color);
-            border-radius: 1px;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        .warning-icon-wrapper:not(.canceled)::before {
-            content: "";
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            box-shadow:
-                0 0 0 2px var(--error-color),
-                0 0 8px rgba(255, 77, 77, 0.6);
-            pointer-events: none;
-            animation: flash 1.5s infinite ease-in-out;
-        }
-
-        @keyframes flash {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.0;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        .warning-icon-wrapper.canceled::before {
-            transform: rotate(45deg);
-        }
-
-        .warning-icon-wrapper.canceled::after {
-            transform: rotate(-45deg);
-        }
-
-        span.temp-symbol {
-            font-size: calc(var(--marquee-fontsize) - 8px);
-        }
-
-        span.current-icon {
-            display: flex;
-            align-items: center;
-        }
-
-        span.current-icon img {
-            width: 44px !important;
-            height: 44px !important;
-            vertical-align: middle;
-        }
-
-        span.current-time {
-            font-size: var(--marquee-timefont);
-            line-height: 1;
-        }
-
-        /* 「明日天氣預報」詳細頁小標籤 */
-        .forecast-badge {
-            background: linear-gradient(180deg, #1b367d 0%, #0d1c47 100%);
-            border: 1.5px solid #ffd166;
-            border-radius: 8px;
-            padding: 4px 14px !important;
-            font-size: calc(var(--marquee-fontsize) - 4px);
-            color: #ffe082;
-            text-shadow: 0 2px 0 #08112e;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-            margin-right: 4px !important;
-        }
-
-        /* 精簡版「日曆圖示 + 明日」圓角徽章，大幅節省橫向空間 */
-        .forecast-badge-compact {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: linear-gradient(180deg, #1b367d 0%, #0d1c47 100%);
-            border: 1.5px solid #ffd166;
-            border-radius: 10px;
-            padding: 5px 12px !important;
-            font-size: calc(var(--marquee-fontsize) - 6px);
-            font-weight: 700;
-            color: #ffe082;
-            text-shadow: 0 2px 0 #08112e;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        /* 徽章內的向量小圖示 */
-        .forecast-badge-compact svg {
-            width: 24px;
-            height: 24px;
-            stroke: #ffd166;
-            fill: none;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: drop-shadow(0 2px 0 #08112e);
-        }
-
-        /* 氣溫、濕度與天氣描述之間的半透明分隔線 */
-        .weather-divider {
-            opacity: 0.45;
-            margin: 0 4px !important;
-        }
-
-
-        /* 「明日天氣預報」固定在左側時的容器結構 */
-        .pinned-forecast-wrapper {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        /* 固定在最左側的標籤區域（不會跟著捲動） */
-        .pinned-left-area {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            height: 100%;
-            padding-right: 14px !important;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* 右側真正負責水平捲動的視窗 */
-        .scrolling-track-area {
-            flex: 1;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* 若右側內容沒有超出寬度，則置中對齊 */
-        .scrolling-track-area:not(.is-overflowing) {
-            justify-content: center;
-        }
-
-        /* 若右側內容超出寬度，則靠左開始捲動 */
-        .scrolling-track-area.is-overflowing {
-            justify-content: flex-start;
+            display: block;
         }
     </style>
 </head>
 
 <body>
-
-    <div class="weather-card">
-        <div class="marquee-container">
-            <div id="marquee-display">正在載入數據...</div>
-        </div>
+    <div class="weather-card" id="weather-card">
+        <canvas id="weather-canvas"></canvas>
     </div>
 
     <script>
+        // -------------------------------------------------------------------------
+        // 1. 全域設定與速度參數 (可隨時微調)
+        // -------------------------------------------------------------------------
+        const FONT_FAMILY = '"WDXL Lubrifont TC", "Microsoft JhengHei", "PMingLiU", sans-serif';
+        const MAIN_FONT_SIZE = 75;          // 主字級 (px)
+        const TIME_FONT_SIZE = 75;          // 時鐘字級 (px)
+        const SCROLL_SPEED_RATIO = 0.08;    // 解析度比例速度：每秒移動容器寬度的 8%
+        const EDGE_PADDING_PX = 24;         // 左右安全留白邊距 (px)
+        const FADE_DURATION_SEC = 0.4;      // 畫面淡入淡出時間 (秒)
+
         const warningIcons = {
             "WFIREY": "firey", "WFIRER": "firer", "WFROST": "frost", "WHOT": "vhot",
             "WCOLD": "cold", "WTS": "ts", "WLIP": "landslip", "WMSGNL": "msn", "WL": "landslip",
@@ -365,39 +71,76 @@
             "TC8NW": "tc8nw", "TC8SE": "tc8se", "TC8SW": "tc8sw", "TC9": "tc9", "TC10": "tc10"
         };
 
-        // 解析度比例速度設定：每秒移動「容器寬度」的 8%
-        const SCROLL_SPEED_RATIO = 0.05; // 每秒移動容器寬度的百分比
-        const MIN_SCROLL_DURATION_SEC = 8; // 單次捲動最短秒數
-        const RIGHT_EDGE_OFFSET_PX = 24;   // 捲動結束時右側額外保留的邊距空間
-
-        // 即時天氣變數
+        // -------------------------------------------------------------------------
+        // 2. 天氣數據與圖片快取 (預先載入圖片確保 Canvas 零延遲繪製)
+        // -------------------------------------------------------------------------
         let currentTemp = "--";
         let currentHumidity = "--";
-        let warningIconsHtml = "";
-        let iconId = "";
+        let currentIconImg = null;
+        let warningImgList = []; // { img: Image, canceled: boolean }
 
-        // 明日預報變數
         let tomorrowMinTemp = "--";
         let tomorrowMaxTemp = "--";
-        let tomorrowMinrh = "--"; // Min濕度
-        let tomorrowMaxrh = "--"; // Max濕度
+        let tomorrowMinrh = "--";
+        let tomorrowMaxrh = "--";
         let tomorrowWeatherDesc = "暫無預報";
-        let tomorrowIconId = "";
+        let tomorrowIconImg = null;
 
-        // 輪播狀態：0 = 時鐘, 1 = 即時天氣, 2 = 「明日天氣預報」開場標題 (2秒), 3 = 明日天氣預報詳細內容
-        let marqueeState = 2; // 初始由「明日天氣預報」開場提示開始（若想從時鐘開始可改為 0）
-        let marqueeTimer = null;
         let hasFetchError = false;
         let errorMessage = "";
-        let timeOffset = 0;
+        const imageCache = {};
 
-        function getAccurateNow() {
-            return new Date(Date.now() + timeOffset);
+        function loadImageCached(url) {
+            return new Promise((resolve) => {
+                if (!url) return resolve(null);
+                if (imageCache[url] && imageCache[url].complete && imageCache[url].naturalWidth > 0) {
+                    return resolve(imageCache[url]);
+                }
+                const img = new Image();
+                // Removed img.crossOrigin = "anonymous" because HKO does not send CORS headers
+                img.onload = () => {
+                    imageCache[url] = img;
+                    resolve(img);
+                };
+                img.onerror = () => resolve(null);
+                img.src = url;
+            });
+        }
+
+        // -------------------------------------------------------------------------
+        // 3. Canvas 狀態機控制 (完全比照流暢版跑馬燈架構)
+        // -------------------------------------------------------------------------
+        const canvas = document.getElementById('weather-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 輪播畫面狀態：0 = 時鐘, 1 = 即時天氣, 2 = 「明日天氣預報」開場 (2秒), 3 = 明日詳細預報
+        let slideState = 2; // 初始從明日天氣預報開始（若需從時鐘開始可改為 0）
+        let animPhase = 'FADE_IN'; // 'FADE_IN' | 'HOLD_START' | 'SCROLLING' | 'HOLD_END' | 'FADE_OUT'
+        let phaseTimer = 0;
+        let fadeAlpha = 0;
+        let scrollX = 0;
+        let targetScrollX = 0;
+        let lastTimestamp = 0;
+
+        function setupAutoResize() {
+            const container = document.getElementById('weather-card');
+            if (!container) return;
+
+            const observer = new ResizeObserver((entries) => {
+                for (let i = 0; i < entries.length; i++) {
+                    const entry = entries[i];
+                    const dpr = window.devicePixelRatio || 1;
+                    canvas.width = entry.contentRect.width * dpr;
+                    canvas.height = entry.contentRect.height * dpr;
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+            });
+            observer.observe(container);
         }
 
         function getChineseDay(dayIndex) {
             const days = ["日", "一", "二", "三", "四", "五", "六"];
-            return "星期" + days.slice(dayIndex, dayIndex + 1);
+            return "星期" + days[dayIndex];
         }
 
         function pad(num) {
@@ -405,252 +148,449 @@
         }
 
         function formatCurrentTime() {
-            const now = getAccurateNow();
-            const year = now.getFullYear();
-            const month = pad(now.getMonth() + 1);
-            const date = pad(now.getDate());
-            const hours = pad(now.getHours());
-            const minutes = pad(now.getMinutes());
-            const seconds = pad(now.getSeconds());
-            const dayStr = getChineseDay(now.getDay());
-
-            return `${year}年${month}月${date}日　${dayStr}　${hours}:${minutes}:${seconds}`;
+            const now = new Date();
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${getChineseDay(now.getDay())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         }
 
+        // 繪製帶立體陰影的清晰文字
+        function drawShadowText(text, x, y, font, fillStyle = '#ffffff', shadowColor = '#0a173d') {
+            ctx.font = font;
+            ctx.fillStyle = shadowColor;
+            ctx.fillText(text, x + 3, y + 3);
+            ctx.fillStyle = fillStyle;
+            ctx.fillText(text, x, y);
+        }
+
+        // 繪製圓角矩形輔助函式
+        function drawRoundRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        // 計算畫面 3（明日詳細預報）右側滾動內容總寬度
+        function measureTomorrowContentWidth() {
+            ctx.font = `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const part1 = `氣溫: `;
+            ctx.font = `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const part2 = `${tomorrowMinTemp} - ${tomorrowMaxTemp}`;
+            ctx.font = `400 ${MAIN_FONT_SIZE - 10}px ${FONT_FAMILY}`;
+            const part3 = `°C`;
+            ctx.font = `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const part4 = `  |  濕度: `;
+            ctx.font = `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const part5 = `${tomorrowMinrh} - ${tomorrowMaxrh}`;
+            ctx.font = `400 ${MAIN_FONT_SIZE - 10}px ${FONT_FAMILY}`;
+            const part6 = `%`;
+            ctx.font = `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const part7 = `  |  ${tomorrowWeatherDesc}`;
+
+            ctx.font = `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const w1 = ctx.measureText(part1 + part4 + part7).width;
+            ctx.font = `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const w2 = ctx.measureText(part2 + part5).width;
+            ctx.font = `400 ${MAIN_FONT_SIZE - 10}px ${FONT_FAMILY}`;
+            const w3 = ctx.measureText(part3 + part6).width;
+
+            return w1 + w2 + w3;
+        }
+
+        function switchToNextSlide() {
+            slideState = (slideState + 1) % 4;
+            animPhase = 'FADE_IN';
+            phaseTimer = 0;
+            scrollX = 0;
+            targetScrollX = 0;
+
+            if (slideState === 3 && !hasFetchError) {
+                const dpr = window.devicePixelRatio || 1;
+                const viewWidth = canvas.width / dpr;
+                const pinnedBadgeWidth = 175; // 左側固定「明日 + 圖示」徽章寬度
+                const availableTrackWidth = viewWidth - (EDGE_PADDING_PX * 2) - pinnedBadgeWidth;
+                const contentWidth = measureTomorrowContentWidth();
+
+                if (contentWidth > availableTrackWidth) {
+                    targetScrollX = -(contentWidth - availableTrackWidth + EDGE_PADDING_PX);
+                }
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. 各畫面繪製邏輯
+        // -------------------------------------------------------------------------
+        function renderSlide0_Clock(viewWidth, viewHeight) {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            drawShadowText(
+                formatCurrentTime(),
+                viewWidth / 2,
+                viewHeight / 2 + 2,
+                `400 ${TIME_FONT_SIZE}px ${FONT_FAMILY}`
+            );
+        }
+
+        function renderSlide1_CurrentWeather(viewWidth, viewHeight) {
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const centerY = viewHeight / 2 + 2;
+
+            if (hasFetchError) {
+                ctx.textAlign = 'center';
+                drawShadowText(`無法顯示即時數據 (${errorMessage})`, viewWidth / 2, centerY, `400 ${MAIN_FONT_SIZE - 15}px ${FONT_FAMILY}`, '#ff6b6b');
+                return;
+            }
+
+            // 計算整體置中起始 X
+            ctx.font = `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const wTempLabel = ctx.measureText('氣溫: ').width;
+            const wHumLabel = ctx.measureText('  濕度: ').width;
+            ctx.font = `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`;
+            const wTempVal = ctx.measureText(String(currentTemp)).width;
+            const wHumVal = ctx.measureText(String(currentHumidity)).width;
+            ctx.font = `400 ${MAIN_FONT_SIZE - 12}px ${FONT_FAMILY}`;
+            const wUnitC = ctx.measureText('°C').width;
+            const wUnitP = ctx.measureText('%').width;
+
+            const iconSize = 64;
+            const warnSize = 52;
+            const totalW = wTempLabel + wTempVal + wUnitC + wHumLabel + wHumVal + wUnitP
+                + (currentIconImg ? iconSize + 16 : 0)
+                + (warningImgList.length > 0 ? warningImgList.length * (warnSize + 8) + 12 : 0);
+
+            let curX = (viewWidth - totalW) / 2;
+
+            drawShadowText('氣溫: ', curX, centerY, `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`);
+            curX += wTempLabel;
+            drawShadowText(String(currentTemp), curX, centerY, `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`);
+            curX += wTempVal;
+            drawShadowText('°C', curX, centerY + 3, `400 ${MAIN_FONT_SIZE - 12}px ${FONT_FAMILY}`);
+            curX += wUnitC;
+
+            drawShadowText('  濕度: ', curX, centerY, `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`);
+            curX += wHumLabel;
+            drawShadowText(String(currentHumidity), curX, centerY, `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`);
+            curX += wHumVal;
+            drawShadowText('%', curX, centerY + 3, `400 ${MAIN_FONT_SIZE - 12}px ${FONT_FAMILY}`);
+            curX += wUnitP;
+
+            if (currentIconImg) {
+                curX += 16;
+                ctx.drawImage(currentIconImg, curX, (viewHeight - iconSize) / 2, iconSize, iconSize);
+                curX += iconSize;
+            }
+
+            if (warningImgList.length > 0) {
+                curX += 12;
+                const nowMs = Date.now();
+                const flashOn = Math.floor(nowMs / 750) % 2 === 0;
+
+                for (let i = 0; i < warningImgList.length; i++) {
+                    const wItem = warningImgList[i];
+                    const wy = (viewHeight - warnSize) / 2;
+                    ctx.drawImage(wItem.img, curX, wy, warnSize, warnSize);
+
+                    if (wItem.canceled) {
+                        ctx.strokeStyle = '#ff0000';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(curX, wy);
+                        ctx.lineTo(curX + warnSize, wy + warnSize);
+                        ctx.moveTo(curX + warnSize, wy);
+                        ctx.lineTo(curX, wy + warnSize);
+                        ctx.stroke();
+                    } else if (flashOn) {
+                        ctx.strokeStyle = '#ff0000';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(curX - 2, wy - 2, warnSize + 4, warnSize + 4);
+                    }
+                    curX += warnSize + 8;
+                }
+            }
+        }
+
+        function renderSlide2_IntroTitle(viewWidth, viewHeight) {
+            let scale = 1;
+            if (animPhase === 'FADE_IN') {
+                const t = Math.min(1, phaseTimer / FADE_DURATION_SEC);
+                scale = 0.88 + 0.12 * (1 - Math.pow(1 - t, 3));
+            }
+
+            ctx.save();
+            ctx.translate(viewWidth / 2, viewHeight / 2);
+            ctx.scale(scale, scale);
+
+            const titleText = '明日天氣預報';
+            // Smaller font size (54px) so it fits comfortably inside the 121px height
+            const titleFont = `400 54px ${FONT_FAMILY}`;
+            ctx.font = titleFont;
+            const textW = ctx.measureText(titleText).width;
+            const iconSize = tomorrowIconImg ? 48 : 0;
+            const gap = tomorrowIconImg ? 14 : 0;
+            const boxW = textW + iconSize + gap + 56;
+            const boxH = 74; // Reduced from 96px to 74px so it never overflows vertically
+
+            const grad = ctx.createLinearGradient(0, -boxH / 2, 0, boxH / 2);
+            grad.addColorStop(0, '#1b367d');
+            grad.addColorStop(1, '#0d1c47');
+
+            drawRoundRect(-boxW / 2, -boxH / 2, boxW, boxH, 14);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#ffd166';
+            ctx.stroke();
+
+            let startX = -boxW / 2 + 28;
+            if (tomorrowIconImg) {
+                ctx.drawImage(tomorrowIconImg, startX, -iconSize / 2, iconSize, iconSize);
+                startX += iconSize + gap;
+            }
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            drawShadowText(titleText, startX, 2, titleFont, '#ffe082', '#08112e');
+
+            ctx.restore();
+        }
+
+        function renderSlide3_TomorrowDetail(viewWidth, viewHeight) {
+            const centerY = viewHeight / 2 + 2;
+
+            if (hasFetchError) {
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                drawShadowText('無法顯示明日天氣預報', viewWidth / 2, centerY, `400 ${MAIN_FONT_SIZE - 15}px ${FONT_FAMILY}`, '#ff6b6b');
+                return;
+            }
+
+            const badgeX = EDGE_PADDING_PX;
+            const badgeW = 145;
+            const badgeH = 64;
+            const badgeY = (viewHeight - badgeH) / 2;
+            const trackStartX = badgeX + badgeW + 18;
+            const trackWidth = viewWidth - trackStartX - EDGE_PADDING_PX;
+
+            // 1. 裁切並繪製右側滾動軌道內容
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(trackStartX, 0, trackWidth, viewHeight);
+            ctx.clip();
+
+            const contentW = measureTomorrowContentWidth();
+            let drawX = targetScrollX < 0
+                ? (trackStartX + scrollX)
+                : (trackStartX + (trackWidth - contentW) / 2);
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            const segments = [
+                { text: '氣溫: ', font: `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: '#ffffff', dy: 0 },
+                { text: `${tomorrowMinTemp} - ${tomorrowMaxTemp}`, font: `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: '#ffffff', dy: 0 },
+                { text: '°C', font: `400 ${MAIN_FONT_SIZE - 12}px ${FONT_FAMILY}`, color: '#ffffff', dy: 4 },
+                { text: '  |  ', font: `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: 'rgba(255,255,255,0.45)', dy: 0 },
+                { text: '濕度: ', font: `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: '#ffffff', dy: 0 },
+                { text: `${tomorrowMinrh} - ${tomorrowMaxrh}`, font: `900 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: '#ffffff', dy: 0 },
+                { text: '%', font: `400 ${MAIN_FONT_SIZE - 12}px ${FONT_FAMILY}`, color: '#ffffff', dy: 4 },
+                { text: '  |  ', font: `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: 'rgba(255,255,255,0.45)', dy: 0 },
+                { text: tomorrowWeatherDesc, font: `400 ${MAIN_FONT_SIZE}px ${FONT_FAMILY}`, color: '#ffffff', dy: 0 }
+            ];
+
+            for (let i = 0; i < segments.length; i++) {
+                const seg = segments[i];
+                drawShadowText(seg.text, drawX, centerY + seg.dy, seg.font, seg.color);
+                ctx.font = seg.font;
+                drawX += ctx.measureText(seg.text).width;
+            }
+            ctx.restore();
+
+            // 2. 繪製左側固定「明日 + 天氣圖示」金邊徽章
+            const grad = ctx.createLinearGradient(0, badgeY, 0, badgeY + badgeH);
+            grad.addColorStop(0, '#1b367d');
+            grad.addColorStop(1, '#0d1c47');
+
+            drawRoundRect(badgeX, badgeY, badgeW, badgeH, 12);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ffd166';
+            ctx.stroke();
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            drawShadowText('明日', badgeX + 12, centerY + 1, `400 34px ${FONT_FAMILY}`, '#ffe082', '#08112e');
+
+            if (tomorrowIconImg) {
+                const miniIcon = 54;
+                ctx.drawImage(tomorrowIconImg, badgeX + badgeW - miniIcon - 10, (viewHeight - miniIcon) / 2, miniIcon, miniIcon);
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 5. 主渲染循環 (requestAnimationFrame + deltaTime 零掉幀引擎)
+        // -------------------------------------------------------------------------
+        function renderLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            let deltaTime = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+            if (deltaTime > 0.1) deltaTime = 0.1;
+
+            const dpr = window.devicePixelRatio || 1;
+            const viewWidth = canvas.width / dpr;
+            const viewHeight = canvas.height / dpr;
+
+            ctx.clearRect(0, 0, viewWidth, viewHeight);
+            phaseTimer += deltaTime;
+
+            // 狀態機時間推演
+            if (animPhase === 'FADE_IN') {
+                fadeAlpha = Math.min(1, phaseTimer / FADE_DURATION_SEC);
+                if (phaseTimer >= FADE_DURATION_SEC) {
+                    fadeAlpha = 1;
+                    animPhase = 'HOLD_START';
+                    phaseTimer = 0;
+                }
+            } else if (animPhase === 'HOLD_START') {
+                const holdTime = slideState === 0 ? 60 : (slideState === 1 ? 20 : (slideState === 2 ? 4.0 : (targetScrollX < 0 ? 1.2 : 12)));
+                if (phaseTimer >= holdTime) {
+                    phaseTimer = 0;
+                    if (slideState === 3 && targetScrollX < 0) {
+                        animPhase = 'SCROLLING';
+                    } else {
+                        animPhase = 'FADE_OUT';
+                    }
+                }
+            } else if (animPhase === 'SCROLLING') {
+                const speedPxPerSec = viewWidth * SCROLL_SPEED_RATIO;
+                scrollX -= speedPxPerSec * deltaTime;
+                if (scrollX <= targetScrollX) {
+                    scrollX = targetScrollX;
+                    animPhase = 'HOLD_END';
+                    phaseTimer = 0;
+                }
+            } else if (animPhase === 'HOLD_END') {
+                if (phaseTimer >= 1.5) {
+                    animPhase = 'FADE_OUT';
+                    phaseTimer = 0;
+                }
+            } else if (animPhase === 'FADE_OUT') {
+                fadeAlpha = Math.max(0, 1 - (phaseTimer / FADE_DURATION_SEC));
+                if (phaseTimer >= FADE_DURATION_SEC) {
+                    switchToNextSlide();
+                }
+            }
+
+            // 繪製當前畫面
+            ctx.save();
+            ctx.globalAlpha = fadeAlpha;
+
+            if (slideState === 0) {
+                renderSlide0_Clock(viewWidth, viewHeight);
+            } else if (slideState === 1) {
+                renderSlide1_CurrentWeather(viewWidth, viewHeight);
+            } else if (slideState === 2) {
+                renderSlide2_IntroTitle(viewWidth, viewHeight);
+            } else {
+                renderSlide3_TomorrowDetail(viewWidth, viewHeight);
+            }
+
+            ctx.restore();
+            requestAnimationFrame(renderLoop);
+        }
+
+        // -------------------------------------------------------------------------
+        // 6. 香港天文台數據抓取與圖片預載
+        // -------------------------------------------------------------------------
         async function fetchWithFallback(url) {
             try {
                 const res = await fetch(url);
                 if (res.ok) return res;
-            } catch (e) {
-                console.log("Direct fetch failed, using fallback...");
-            }
-
+            } catch (e) { }
             const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
             const proxyRes = await fetch(proxyUrl);
-            if (!proxyRes.ok) {
-                throw new Error("HTTP " + proxyRes.status);
-            }
+            if (!proxyRes.ok) throw new Error("HTTP " + proxyRes.status);
             return proxyRes;
         }
 
         async function fetchWeatherData() {
             try {
-                const rawRhrUrl = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc';
-                const rawWarnUrl = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc';
-                const rawFndUrl = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=tc';
-
-                const [rhrResponse, warnResponse, fndResponse] = await Promise.all([
-                    fetchWithFallback(rawRhrUrl),
-                    fetchWithFallback(rawWarnUrl),
-                    fetchWithFallback(rawFndUrl)
+                const [rhrRes, warnRes, fndRes] = await Promise.all([
+                    fetchWithFallback('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=tc'),
+                    fetchWithFallback('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc'),
+                    fetchWithFallback('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=tc')
                 ]);
 
-                if (!rhrResponse || !warnResponse || !fndResponse) {
-                    throw new Error("Network error");
-                }
+                const rhrData = await rhrRes.json();
+                const warnData = await warnRes.json();
+                const fndData = await fndRes.json();
 
-                const rhrData = await rhrResponse.json();
-                const warnData = await warnResponse.json();
-                const fndData = await fndResponse.json();
-
-                // 1. 解析即時天氣
-                if (rhrData && rhrData.temperature && rhrData.temperature.data) {
+                // 即時氣溫與濕度
+                if (rhrData?.temperature?.data) {
                     const tempArray = rhrData.temperature.data;
                     const hkoTemp = tempArray.find(item => item.place === "筲箕灣") || tempArray[0];
                     if (hkoTemp) currentTemp = hkoTemp.value;
                 }
-
-                if (rhrData && rhrData.humidity && rhrData.humidity.data && rhrData.humidity.data.length > 0) {
+                if (rhrData?.humidity?.data?.length > 0) {
                     currentHumidity = rhrData.humidity.data[0].value;
                 }
-
-                if (rhrData && rhrData.icon && rhrData.icon.length > 0) {
-                    iconId = rhrData.icon[0];
+                if (rhrData?.icon?.length > 0) {
+                    currentIconImg = await loadImageCached(`https://www.hko.gov.hk/images/HKOWxIconOutline/pic${rhrData.icon[0]}.png`);
                 }
 
-                // 2. 解析明日預報
-                if (fndData && fndData.weatherForecast && fndData.weatherForecast.length > 0) {
-                    const tomorrowData = fndData.weatherForecast[0];
-                    tomorrowMinTemp = tomorrowData.forecastMintemp.value;
-                    tomorrowMaxTemp = tomorrowData.forecastMaxtemp.value;
-                    tomorrowMinrh = tomorrowData.forecastMinrh.value;
-                    tomorrowMaxrh = tomorrowData.forecastMaxrh.value;
-                    tomorrowIconId = tomorrowData.ForecastIcon;
-                    tomorrowWeatherDesc = (tomorrowData.forecastWeather || "").replace(/\s+/g, ' ').trim();
+                // 明日預報
+                if (fndData?.weatherForecast?.length > 0) {
+                    const tData = fndData.weatherForecast[0];
+                    tomorrowMinTemp = tData.forecastMintemp.value;
+                    tomorrowMaxTemp = tData.forecastMaxtemp.value;
+                    tomorrowMinrh = tData.forecastMinrh.value;
+                    tomorrowMaxrh = tData.forecastMaxrh.value;
+                    tomorrowWeatherDesc = (tData.forecastWeather || "").replace(/\s+/g, ' ').trim();
+                    if (tData.ForecastIcon) {
+                        tomorrowIconImg = await loadImageCached(`https://www.hko.gov.hk/images/HKOWxIconOutline/pic${tData.ForecastIcon}.png`);
+                    }
                 }
 
-                // 3. 解析警告圖示
+                // 警告圖示預載
+                const newWarnImgs = [];
                 if (warnData && Object.keys(warnData).length > 0) {
-                    let tempIconsHtml = '<span class="marquee-warning-icons">';
-                    let iconCount = 0;
-
+                    let count = 0;
                     for (const key in warnData) {
-                        if (Object.prototype.hasOwnProperty.call(warnData, key) && iconCount < 5) {
+                        if (Object.prototype.hasOwnProperty.call(warnData, key) && count < 5) {
                             const detail = warnData[key];
-                            const code = detail.code;
-                            const actionCode = detail.actionCode;
+                            let iconName = warningIcons[detail.code] || 'warn';
+                            const isCanceled = (detail.actionCode === 'CANCEL');
+                            if (isCanceled) iconName += '_dim';
 
-                            let iconName = Object.prototype.hasOwnProperty.call(warningIcons, code) ? warningIcons[code] : 'warn';
-                            const isCanceled = (actionCode === 'CANCEL');
-
-                            if (isCanceled) {
-                                iconName = iconName + '_dim';
-                            }
-
-                            tempIconsHtml += `
-                            <span class="warning-icon-wrapper ${isCanceled ? 'canceled' : ''}">
-                                <img class="warning-icon" src="https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${iconName}.gif" alt="warning">
-                            </span>`;
-                            iconCount++;
+                            const wImg = await loadImageCached(`https://www.hko.gov.hk/tc/wxinfo/dailywx/images/${iconName}.gif`);
+                            if (wImg) newWarnImgs.push({ img: wImg, canceled: isCanceled });
+                            count++;
                         }
                     }
-                    tempIconsHtml += '</span>';
-                    warningIconsHtml = tempIconsHtml;
-                } else {
-                    warningIconsHtml = "";
                 }
-
+                warningImgList = newWarnImgs;
                 hasFetchError = false;
                 errorMessage = "";
-
-            } catch (error) {
-                console.error('Fetch Weather Error:', error);
+            } catch (err) {
                 hasFetchError = true;
-                errorMessage = error.message || error.toString();
+                errorMessage = err.message || "Error";
             }
         }
 
-        function updateLiveClock() {
-            const clockEl = document.getElementById('live-clock-target');
-            if (clockEl) {
-                clockEl.innerHTML = formatCurrentTime();
-            }
-        }
-
-        function applyOverflowScroll(onCompleteCallback) {
-            const displayEl = document.getElementById('marquee-display');
-            // 改為偵測右側捲動軌道的寬度（扣除了左側固定標籤後的剩餘寬度）
-            const trackEl = displayEl.querySelector('.scrolling-track-area') || displayEl;
-            const rowEl = trackEl.querySelector('.weather-marquee-row');
-
-            trackEl.classList.remove('is-overflowing');
-            if (!rowEl) return false;
-
-            const containerWidth = trackEl.clientWidth;
-            const contentWidth = rowEl.scrollWidth;
-
-            if (contentWidth > containerWidth) {
-                const overflowAmount = Math.ceil(contentWidth - containerWidth + RIGHT_EDGE_OFFSET_PX);
-                const dynamicSpeedPxPerSec = containerWidth * SCROLL_SPEED_RATIO;
-                const durationSec = Math.max(MIN_SCROLL_DURATION_SEC, Number((overflowAmount / dynamicSpeedPxPerSec).toFixed(2)));
-
-                trackEl.classList.add('is-overflowing');
-                rowEl.style.setProperty('--scroll-dist', `-${overflowAmount}px`);
-                rowEl.style.setProperty('--scroll-duration', `${durationSec}s`);
-                rowEl.classList.add('scroll-once');
-
-                rowEl.addEventListener('animationend', () => {
-                    if (typeof onCompleteCallback === 'function') {
-                        onCompleteCallback();
-                    }
-                }, { once: true });
-
-                return true;
-            }
-
-            return false;
-        }
-
-        function rotateMarqueeLoop() {
-            clearTimeout(marqueeTimer);
-            const displayEl = document.getElementById('marquee-display');
-            displayEl.classList.add('fade');
-
-            setTimeout(function () {
-                let nextDelay = 20000;
-                let handledByAnimation = false;
-                displayEl.classList.remove('is-overflowing');
-
-                if (marqueeState === 0) {
-                    // 畫面 0：即時日期與時間（停留 60 秒）
-                    displayEl.innerHTML = `<span class="current-time" id="live-clock-target">${formatCurrentTime()}</span>`;
-                    nextDelay = 60000;
-                    marqueeState = 1;
-
-                } else if (marqueeState === 1) {
-                    // 畫面 1：即時氣溫、濕度與警告（停留 20 秒）
-                    if (hasFetchError) {
-                        displayEl.innerHTML = `<span class="error-text">無法顯示即時數據 (${errorMessage})</span>`;
-                    } else {
-                        const finalIconSrc = iconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${iconId}.png" alt="Weather Status">` : '';
-                        displayEl.innerHTML = `
-                        <div class="weather-marquee-row">
-                            <span>氣温: <span class="temp-text">${currentTemp}</span><span class="temp-symbol">°C</span></span>
-                            <span>&nbsp;濕度: <span class="temp-text">${currentHumidity}</span><span class="temp-symbol">%</span></span>
-                            <span class="current-icon">${finalIconSrc}</span>
-                            <span>${warningIconsHtml}</span>
-                        </div>`;
-                    }
-                    marqueeState = 2;
-
-                } else if (marqueeState === 2) {
-                    // 畫面 2：先以動畫顯示「明日天氣預報」開場標題（停留 2 秒後淡出切換至詳細內容）
-                    const tomorrowIconSrc = tomorrowIconId ? `<span class="current-icon"><img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${tomorrowIconId}.png" alt="Tomorrow Icon"></span>` : '';
-                    displayEl.innerHTML = `
-                    <div class="forecast-intro-title">
-                        ${tomorrowIconSrc}
-                        <span>明日天氣預報</span>
-                    </div>`;
-                    nextDelay = 2000; // 停留 2 秒
-                    marqueeState = 3;
-
-                } else {
-                    // 畫面 3：左側精簡「日曆圖示 + 明日」徽章 + 右側單次捲動詳細內容
-                    marqueeState = 0; // 播完後切換回時鐘
-                    if (hasFetchError) {
-                        displayEl.innerHTML = `<span class="error-text">無法顯示明日天氣預報</span>`;
-                    } else {
-                        const tomorrowIconSrc = tomorrowIconId ? `<img src="https://www.hko.gov.hk/images/HKOWxIconOutline/pic${tomorrowIconId}.png" alt="Tomorrow Forecast">` : '';
-                        displayEl.innerHTML = `
-                            <div class="pinned-forecast-wrapper">
-                                <div class="pinned-left-area">
-                                    <span class="forecast-badge-compact">
-                                        <span class="current-icon">${tomorrowIconSrc}</span>
-                                    </span>
-                                </div>
-                                <div class="scrolling-track-area">
-                                    <div class="weather-marquee-row">
-                                        <span>氣溫: <span class="temp-text">${tomorrowMinTemp} - ${tomorrowMaxTemp}</span><span class="temp-symbol">°C</span></span>
-                                        <span class="weather-divider">|</span>
-                                        <span>濕度: <span class="temp-text">${tomorrowMinrh} - ${tomorrowMaxrh}</span><span class="temp-symbol">%</span></span>
-                                        <span class="weather-divider">|</span>
-                                        <span>${tomorrowWeatherDesc}</span>
-                                    </div>
-                                </div>
-                            </div>`;
-
-                        // 啟動單次捲動偵測
-                        handledByAnimation = applyOverflowScroll(rotateMarqueeLoop);
-                    }
-                }
-
-                displayEl.classList.remove('fade');
-
-                if (!handledByAnimation) {
-                    marqueeTimer = setTimeout(rotateMarqueeLoop, nextDelay);
-                }
-
-            }, 400);
-        }
-
-        async function initWidget() {
+        window.addEventListener('DOMContentLoaded', async () => {
+            setupAutoResize();
             await fetchWeatherData();
-            rotateMarqueeLoop();
-            setInterval(updateLiveClock, 1000);
+            if (slideState === 3) {
+                // 初始化計算首次是否需要滾動
+                slideState = 2;
+                switchToNextSlide();
+            }
+            requestAnimationFrame(renderLoop);
             setInterval(fetchWeatherData, 200000);
-        }
-
-        initWidget();
+        });
     </script>
 </body>
 
