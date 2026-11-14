@@ -114,7 +114,7 @@
         const ctx = canvas.getContext('2d');
 
         // 輪播畫面狀態：0 = 時鐘, 1 = 即時天氣, 2 = 「明日天氣預報」開場 (2秒), 3 = 明日詳細預報
-        let slideState = 2; // 初始從明日天氣預報開始（若需從時鐘開始可改為 0）
+        let slideState = 0; // 初始從明日天氣預報開始（若需從時鐘開始可改為 0）
         let animPhase = 'FADE_IN'; // 'FADE_IN' | 'HOLD_START' | 'SCROLLING' | 'HOLD_END' | 'FADE_OUT'
         let phaseTimer = 0;
         let fadeAlpha = 0;
@@ -149,7 +149,7 @@
 
         function formatCurrentTime() {
             const now = new Date();
-            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${getChineseDay(now.getDay())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日　${getChineseDay(now.getDay())}　${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         }
 
         // 繪製帶立體陰影的清晰文字
