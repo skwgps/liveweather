@@ -152,6 +152,16 @@
             return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日　${getChineseDay(now.getDay())}　${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         }
 
+        // 取得明天日期的 YYYYMMDD 字串（例如 20261116），用於精準比對天文台 fnd 預報日期
+            function getTomorrowDateStr() {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const yyyy = tomorrow.getFullYear();
+                const mm = pad(tomorrow.getMonth() + 1);
+                const dd = pad(tomorrow.getDate());
+                return `${yyyy}${mm}${dd}`;
+            }
+
         // 繪製帶立體陰影的清晰文字
         function drawShadowText(text, x, y, font, fillStyle = '#ffffff', shadowColor = '#0a173d') {
             ctx.font = font;
@@ -541,16 +551,22 @@
                     currentIconImg = await loadImageCached(`https://www.hko.gov.hk/images/HKOWxIconOutline/pic${rhrData.icon[0]}.png`);
                 }
 
-                // 明日預報
+                // 明日預報（透過 forecastDate 比對明天日期，避免上午抓到「今日」預報）
                 if (fndData?.weatherForecast?.length > 0) {
-                    const tData = fndData.weatherForecast[0];
-                    tomorrowMinTemp = tData.forecastMintemp.value;
-                    tomorrowMaxTemp = tData.forecastMaxtemp.value;
-                    tomorrowMinrh = tData.forecastMinrh.value;
-                    tomorrowMaxrh = tData.forecastMaxrh.value;
-                    tomorrowWeatherDesc = (tData.forecastWeather || "").replace(/\s+/g, ' ').trim();
-                    if (tData.ForecastIcon) {
-                        tomorrowIconImg = await loadImageCached(`https://www.hko.gov.hk/images/HKOWxIconOutline/pic${tData.ForecastIcon}.png`);
+                    const tomorrowStr = getTomorrowDateStr();
+                    const tData = fndData.weatherForecast.find(item => item.forecastDate === tomorrowStr)
+                        || fndData.weatherForecast[1]
+                        || fndData.weatherForecast[0];
+
+                    if (tData) {
+                        tomorrowMinTemp = tData.forecastMintemp.value;
+                        tomorrowMaxTemp = tData.forecastMaxtemp.value;
+                        tomorrowMinrh = tData.forecastMinrh.value;
+                        tomorrowMaxrh = tData.forecastMaxrh.value;
+                        tomorrowWeatherDesc = (tData.forecastWeather || "").replace(/\s+/g, ' ').trim();
+                        if (tData.ForecastIcon) {
+                            tomorrowIconImg = await loadImageCached(`https://www.hko.gov.hk/images/HKOWxIconOutline/pic${tData.ForecastIcon}.png`);
+                        }
                     }
                 }
 
