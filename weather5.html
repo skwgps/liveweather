@@ -265,11 +265,11 @@
             const wUnitC = ctx.measureText('°C').width;
             const wUnitP = ctx.measureText('%').width;
 
-            const iconSize = 64;
-            const warnSize = 52;
+            const iconSize = 75;
+            const warnSize = 72;
             const totalW = wTempLabel + wTempVal + wUnitC + wHumLabel + wHumVal + wUnitP
                 + (currentIconImg ? iconSize + 16 : 0)
-                + (warningImgList.length > 0 ? warningImgList.length * (warnSize + 8) + 12 : 0);
+                + (warningImgList.length > 0 ? warningImgList.length * (warnSize + 10) + 12 : 0);
 
             let curX = (viewWidth - totalW) / 2;
 
@@ -317,7 +317,7 @@
                         ctx.lineWidth = 3;
                         ctx.strokeRect(curX - 2, wy - 2, warnSize + 4, warnSize + 4);
                     }
-                    curX += warnSize + 8;
+                    curX += warnSize + 10;
                 }
             }
         }
